@@ -6,21 +6,25 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
+import com.example.navigationproject.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private val controller by lazy {
         findNavController(R.id.mainContainer)
     }
+    lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding =  ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        NavigationUI.setupActionBarWithNavController(this, controller)
+        NavigationUI.setupActionBarWithNavController(this, controller, binding.drawer)
+        NavigationUI.setupWithNavController(binding.navigationView, controller)
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        return controller.navigateUp()
+        return NavigationUI.navigateUp(controller, binding.drawer)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
