@@ -4,41 +4,56 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.mygame.ANSWER.*
 import kotlin.random.Random
 
 class ViewModelGame: ViewModel() {
-    private var index = 0
-    var question: Question
+    private var index = MutableLiveData(0)
+    val correctLiveData by lazy {
+        MutableLiveData(0)
+    }
+    val incorrectLiveData by lazy {
+        MutableLiveData(0)
+    }
     var questions: List<Question> = List(10) {
         Question("Question${it + 1}: Is it Ture?", Random.nextBoolean())
     }
-
-    init {
-        question = questions[0]
-    }
+    lateinit var question: Question
 
     fun answer(context: Context, answer: Boolean) {
-        question.answer(context, answer)
+        question.answer(context, answer).run {
+            when(this) {
+                INCORRECT -> {
+                    incorrectLiveData.value = incorrectLiveData.value!! + 1
+                }
+                else -> {
+                    correctLiveData.value = correctLiveData.value!! + 1
+                }
+            }
+        }
     }
 
     fun setQuestion(): Pair<Question, Int> {
+        val index = index.value!!
         question = questions[index]
         return Pair(question, index)
     }
 
     fun next() : Boolean {
-        if (index < 9) {
-            index++
+        val value = index.value!!
+        if (value < 9) {
+            index.value = value + 1
             return true
         }
         return false
     }
 
     fun prev() : Boolean {
-        if (0 < index) {
-            index--
+        val value = index.value!!
+        if (0 < value) {
+            index.value = value - 1
             return true
         }
         return false
@@ -60,19 +75,20 @@ data class Question(val question: String, val answer: Boolean) {
     var hasCheated = false
     var hasAnswered = false
 
-    fun answer(context: Context, answer: Boolean) {
-        if (hasAnswered) return
+    fun answer(context: Context, answer: Boolean): ANSWER? {
+        if (hasAnswered) return null
         hasAnswered = true
-        val msg = if (answer == this.answer) {
+        val result = if (answer == this.answer) {
             if (hasCheated) {
-                "Cheating is wrong!!!"
+                CHEAT
             } else {
-                "Correct!!!"
+                CORRECT
             }
         } else {
-            "Incorrect!!!"
+            INCORRECT
         }
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, result.msg(), Toast.LENGTH_SHORT).show()
+        return result
     }
 
     fun cheat(launcher: ActivityResultLauncher<Intent>, context: Context) {
@@ -81,4 +97,15 @@ data class Question(val question: String, val answer: Boolean) {
             putExtra(ANSWER, answer)
         })
     }
+}
+
+enum class ANSWER {
+    CORRECT {
+        override fun msg() = "Correct!!!"
+    }, INCORRECT {
+        override fun msg() = "Incorrect!!!"
+    }, CHEAT {
+        override fun msg() = "Cheating is wrong!!!"
+    };
+    abstract fun msg(): String
 }
