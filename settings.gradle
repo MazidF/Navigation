@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "NavigationProject"
 include ':app'
+include ':app:netflix'
+include ':app:mygame'
