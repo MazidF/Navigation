@@ -3,98 +3,49 @@ package com.example.mygame
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import kotlin.random.Random
 
 class ViewModelGame: ViewModel() {
     private var index = 0
     var question: Question
-    var questions: List<Question>
-    var fragmentGame: FragmentGame? = null
+    var questions: List<Question> = List(10) {
+        Question("Question${it + 1}: Is it Ture?", Random.nextBoolean())
+    }
 
     init {
-        questions = List(10) {
-            Question("Question${it + 1}: Is it Ture?", Random.nextBoolean())
-        }
         question = questions[0]
     }
 
-    fun setFragment(fragmentGame: FragmentGame) {
-        this.fragmentGame = fragmentGame
-        fragmentGame.run {
-            with(binding) {
-                gameNext.setOnClickListener {
-                    next()
-                }
-                gamePrevious.setOnClickListener {
-                    prev()
-                }
-                gameCheat.setOnClickListener {
-                    cheat()
-                }
-                gameTrue.setOnClickListener {
-                    answer(true)
-                }
-                gameFalse.setOnClickListener {
-                    answer(false)
-                }
-            }
-        }
-        setQuestion(index)
+    fun answer(context: Context, answer: Boolean) {
+        question.answer(context, answer)
     }
 
-    fun remove() {
-        fragmentGame = null
-    }
-
-    private fun answer(answer: Boolean) {
-        fragmentGame?.run {
-            question.answer(requireContext(), answer)
-            setEnable(false)
-        }
-    }
-
-    private fun setQuestion(index: Int) {
+    fun setQuestion(): Pair<Question, Int> {
         question = questions[index]
-        fragmentGame?.run {
-            with(binding) {
-                gameQuestion.text = question.question
-                setEnable(!question.hasAnswered)
-                if (question.hasCheated) {
-                    Toast.makeText(requireContext(), "Shame!!!", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+        return Pair(question, index)
     }
 
-    private fun setEnable(isEnable: Boolean) {
-        fragmentGame?.run {
-            with(binding) {
-                gameFalse.isEnabled = isEnable
-                gameTrue.isEnabled = isEnable
-                gameCheat.isEnabled = isEnable
-            }
-        }
-    }
-
-    private fun next() {
+    fun next() : Boolean {
         if (index < 9) {
             index++
-            setQuestion(index)
+            return true
         }
+        return false
     }
 
-    private fun prev() {
+    fun prev() : Boolean {
         if (0 < index) {
             index--
-            setQuestion(index)
+            return true
         }
+        return false
     }
 
-    private fun cheat() {
-        fragmentGame?.run {
-            question.cheat(app)
-        }
+    fun cheat(launcher: ActivityResultLauncher<Intent>, context: Context) {
+        question.cheat(launcher, context)
     }
 }
 
@@ -124,9 +75,8 @@ data class Question(val question: String, val answer: Boolean) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
     }
 
-    fun cheat(app: MainActivity) {
-        app.question = this
-        app.launcher.launch(Intent(app, ActivityCheat::class.java).apply {
+    fun cheat(launcher: ActivityResultLauncher<Intent>, context: Context) {
+        launcher.launch(Intent(context, ActivityCheat::class.java).apply {
             putExtra(QUESTION, question)
             putExtra(ANSWER, answer)
         })
