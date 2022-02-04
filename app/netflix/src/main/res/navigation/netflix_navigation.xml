@@ -66,4 +66,5 @@
             android:id="@+id/action_fragmentFavorite_to_fragmentComingSoon"
             app:destination="@id/fragmentComingSoon" />
     </fragment>
+
 </navigation>

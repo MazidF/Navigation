@@ -15,8 +15,10 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import com.example.netflix.ViewModelNetflix.Companion.ICON.*
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.NavigationUI
 import com.example.netflix.databinding.FragmentHomeBinding
 
 class FragmentHome : Fragment(R.layout.fragment_home) {
@@ -66,9 +68,9 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
         dialog = AlertDialog.Builder(context)
             .setTitle("You should register first!!")
             .setPositiveButton("Register") { _, _ ->
-                controller.navigate(FragmentHomeDirections.actionFragmentHomeToFragmentProfile())
+                model.moveToLiveData.value = PROFILE
             }.setNeutralButton("Cancel") { _, _ ->
-
+                // ignore :)
             }
     }
 

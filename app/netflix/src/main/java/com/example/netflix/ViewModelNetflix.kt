@@ -5,7 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class ViewModelNetflix : ViewModel() {
-    var user: MutableList<NetflixUser>? = null
+    val moveToLiveData = MutableLiveData(ICON.NONE)
+    var user: MutableLiveData<NetflixUser>? = null
     val hasRegistered = MutableLiveData(false)
     val movies by lazy {
         MutableLiveData<MutableList<View>>(mutableListOf())
@@ -26,5 +27,11 @@ class ViewModelNetflix : ViewModel() {
     fun removeFavorite(view: View) {
         favoriteMovies.value?.remove(view)
         favoriteRemoved.value = view
+    }
+
+    companion object {
+        enum class ICON {
+            HOME, FAVORITE, COMING_SOON, PROFILE, NONE;
+        }
     }
 }
