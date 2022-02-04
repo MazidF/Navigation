@@ -22,9 +22,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        if (savedInstanceState == null) {
-            init()
-        }
+        init()
     }
 
     private fun init() {
@@ -35,11 +33,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBundle("controller", controller.saveState())
+//        outState.putBundle("controller", controller.saveState())
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        controller.restoreState(savedInstanceState.getBundle("controller"))
+//        controller.restoreState(savedInstanceState.getBundle("controller"))
     }
 }

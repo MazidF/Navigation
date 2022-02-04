@@ -1,23 +1,22 @@
 package com.example.mygame
 
-import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
+import android.annotation.SuppressLint
+import androidx.core.view.GravityCompat
+import androidx.navigation.ui.NavigationUI
 import androidx.fragment.app.FragmentFactory
-import androidx.navigation.findNavController
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.NavigationUI
 import com.example.mygame.Question.Companion.HAS_SEEN
+import androidx.activity.result.ActivityResultLauncher
 import com.example.mygame.databinding.ActivityMainBinding
 import com.example.mygame.databinding.LayoutHeaderBinding
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : AppCompatActivity() {
     private val controller by lazy {

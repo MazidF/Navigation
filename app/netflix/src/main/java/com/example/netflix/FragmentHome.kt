@@ -9,21 +9,27 @@ import android.util.Log
 import android.view.Gravity.CENTER
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams.*
+import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.MutableLiveData
+import androidx.navigation.fragment.findNavController
 import com.example.netflix.databinding.FragmentHomeBinding
 
 class FragmentHome : Fragment(R.layout.fragment_home) {
+    var hasRegistered = false
     val homeModel: ViewModelSaveLayout by viewModels()
     val model: ViewModelNetflix by activityViewModels()
     lateinit var binding: FragmentHomeBinding
+    lateinit var dialog: AlertDialog.Builder
     private val context by lazy {
         requireActivity()
+    }
+    val controller by lazy {
+        findNavController()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,6 +44,7 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
         with(binding.homeList) {
             val list = homeModel.linearLayouts.value!!
             if (list.isNotEmpty()) {
+                hasRegistered = model.hasRegistered.value!!
                 for (linear in list) {
                     linear.parent
                     addView(linear)
@@ -51,6 +58,18 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
                 }
             }
         }
+        with(model) {
+            hasRegistered.observe(viewLifecycleOwner) {
+                this@FragmentHome.hasRegistered = it
+            }
+        }
+        dialog = AlertDialog.Builder(context)
+            .setTitle("You should register first!!")
+            .setPositiveButton("Register") { _, _ ->
+                controller.navigate(FragmentHomeDirections.actionFragmentHomeToFragmentProfile())
+            }.setNeutralButton("Cancel") { _, _ ->
+
+            }
     }
 
     private fun addLinear(int: Int, bitmap: Bitmap, param: LinearLayout.LayoutParams): LinearLayout {
@@ -73,9 +92,12 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
         }
         return movie.getView(context) { imageView, view ->
             imageView.apply {
-//                var isRed = false
                 tag = false
                 setOnClickListener {
+                    if (!hasRegistered) {
+                        dialog.show()
+                        return@setOnClickListener
+                    }
                     tag = if (tag == true) {
                         unlike(view.tag as View)
                         clearColorFilter()
@@ -85,7 +107,6 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
                         setColorFilter(RED)
                         true
                     }
-//                    isRed = isRed.not()
                 }
             }
         }.apply {

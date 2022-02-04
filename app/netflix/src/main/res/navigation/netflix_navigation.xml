@@ -7,20 +7,63 @@
     <fragment
         android:id="@+id/fragmentHome"
         android:name="com.example.netflix.FragmentHome"
-        android:label="FragmentHome" />
+        android:label="FragmentHome" >
+        <action
+            android:id="@+id/action_fragmentHome_to_fragmentProfile"
+            app:destination="@id/fragmentProfile" />
+        <action
+            android:id="@+id/action_fragmentHome_to_fragmentComingSoon"
+            app:destination="@id/fragmentComingSoon" />
+        <action
+            android:id="@+id/action_fragmentHome_to_fragmentFavorite"
+            app:destination="@id/fragmentFavorite" />
+    </fragment>
 
     <fragment
         android:id="@+id/fragmentProfile"
         android:name="com.example.netflix.FragmentProfile"
-        android:label="FragmentProfile" />
+        android:label="FragmentProfile" >
+        <action
+            android:id="@+id/action_fragmentProfile_to_fragmentFavorite"
+            app:destination="@id/fragmentFavorite" />
+        <action
+            android:id="@+id/action_fragmentProfile_to_fragmentComingSoon"
+            app:destination="@id/fragmentComingSoon" />
+        <action
+            android:id="@+id/action_fragmentProfile_to_fragmentHome"
+            app:destination="@id/fragmentHome" />
+    </fragment>
 
     <fragment
         android:id="@+id/fragmentComingSoon"
         android:name="com.example.netflix.FragmentComingSoon"
-        android:label="FragmentComingSoon" />
+        android:label="FragmentComingSoon" >
+        <action
+            android:id="@+id/action_fragmentComingSoon_to_fragmentFavorite"
+            app:destination="@id/fragmentFavorite" />
+        <action
+            android:id="@+id/action_fragmentComingSoon_to_fragmentHome"
+            app:destination="@id/fragmentHome" />
+        <action
+            android:id="@+id/action_fragmentComingSoon_to_fragmentProfile"
+            app:destination="@id/fragmentProfile" />
+    </fragment>
 
     <fragment
         android:id="@+id/fragmentFavorite"
         android:name="com.example.netflix.FragmentFavorite"
-        android:label="FragmentFavorite" />
+        android:label="FragmentFavorite" >
+        <action
+            android:id="@+id/action_fragmentFavorite_to_fragmentProfile"
+            app:destination="@id/fragmentProfile" />
+        <action
+            android:id="@+id/action_fragmentFavorite_to_fragmentHome"
+            app:destination="@id/fragmentHome" />
+        <action
+            android:id="@+id/action_fragmentFavorite_to_fragmentHome2"
+            app:destination="@id/fragmentHome" />
+        <action
+            android:id="@+id/action_fragmentFavorite_to_fragmentComingSoon"
+            app:destination="@id/fragmentComingSoon" />
+    </fragment>
 </navigation>
