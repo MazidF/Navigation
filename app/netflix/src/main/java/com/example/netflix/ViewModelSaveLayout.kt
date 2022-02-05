@@ -14,6 +14,8 @@ class ViewModelSaveLayout : ViewModel() {
         MutableLiveData<MutableList<View>>(mutableListOf())
     }
 
+    var binding: Any? = null
+
     fun addLinear(linearLayout: LinearLayout) {
         linearLayouts.value!!.add(linearLayout)
     }

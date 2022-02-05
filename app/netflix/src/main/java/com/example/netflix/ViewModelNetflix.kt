@@ -1,12 +1,14 @@
 package com.example.netflix
 
+import android.graphics.Bitmap
 import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class ViewModelNetflix : ViewModel() {
+    var image = MutableLiveData<Bitmap>(null)
     val moveToLiveData = MutableLiveData(ICON.NONE)
-    var user: MutableLiveData<NetflixUser>? = null
+    var user = MutableLiveData<NetflixUser>(null)
     val hasRegistered = MutableLiveData(false)
     val movies by lazy {
         MutableLiveData<MutableList<View>>(mutableListOf())

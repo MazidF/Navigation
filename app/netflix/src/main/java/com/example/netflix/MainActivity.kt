@@ -1,17 +1,21 @@
 package com.example.netflix
 
 import android.Manifest
+import android.R.attr.bitmap
+import android.R.attr.data
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import android.view.View.*
+import android.widget.Toolbar
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -28,6 +32,7 @@ import com.example.netflix.databinding.ActivityMainBinding
 import com.example.netflix.databinding.UserLayoutBinding
 import java.io.FileDescriptor
 import java.io.IOException
+import java.io.InputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -43,6 +48,23 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         launcherInit()
+        setCustomFactory()
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        getPermission()
+        init()
+    }
+
+    private fun getPermission() {
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            if (!it) {
+                finish()
+            }
+        }.launch(Manifest.permission.CAMERA)
+    }
+
+    private fun setCustomFactory() {
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment {
                 if (loadFragmentClass(classLoader, className) == FragmentProfile::class.java) {
@@ -51,42 +73,21 @@ class MainActivity : AppCompatActivity() {
                 return super.instantiate(classLoader, className)
             }
         }
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        root = binding.root
-        init()
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            if (!it) {
-                finish()
-            }
-        }.launch(Manifest.permission.CAMERA)
     }
 
     private fun launcherInit() {
         launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            it.data?.let { intent ->
-                uriToBitmap(intent.data)
-            }
+            val intent = it.data ?: return@registerForActivityResult
+            val bitmap = intent.data?.let { uri ->
+                MediaStore.Images.Media.getBitmap(contentResolver, uri)
+            } ?: intent.extras?.get("data") as Bitmap
+            model.image.value = bitmap
         }
-    }
-
-    private fun uriToBitmap(selectedFileUri: Uri?): Bitmap? {
-        if (selectedFileUri == null) return null
-        try {
-            val parcelFileDescriptor = contentResolver.openFileDescriptor(selectedFileUri, "r")
-            val fileDescriptor: FileDescriptor = parcelFileDescriptor!!.fileDescriptor
-            val image = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            parcelFileDescriptor.close()
-            return image
-        } catch (e: IOException) {
-            Log.e("tag-tag", e.stackTraceToString())
-        }
-        return null
     }
 
     private fun init() {
         with(binding) {
+            this@MainActivity.root = this.root
             menuItems = bottomNavigation.menu.children.toList()
             NavigationUI.setupActionBarWithNavController(this@MainActivity, controller, root)
             NavigationUI.setupWithNavController(bottomNavigation, controller)
@@ -114,14 +115,14 @@ class MainActivity : AppCompatActivity() {
             model.hasRegistered.observe(this@MainActivity) {
                 if (it) {
                     userRegister.visibility = GONE
-                    val user = model.user!!.value!!
+                    val user = model.user.value!!
                     userUsername.apply {
                         text = user.userName
-                        visibility = INVISIBLE
+                        visibility = VISIBLE
                     }
                     userEmail.apply {
                         text = user.email
-                        visibility = INVISIBLE
+                        visibility = VISIBLE
                     }
                     user.image?.let { bitmap ->
                         userImage.setImageBitmap(bitmap)
@@ -147,20 +148,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (!closeDrawer()) {
+        if (!drawerHandler(false)) {
             super.onBackPressed()
         }
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        return closeDrawer() || NavigationUI.navigateUp(controller, root) || super.onSupportNavigateUp()
+        return drawerHandler() || /*NavigationUI.navigateUp(controller, root) ||*/ super.onSupportNavigateUp()
     }
 
     @SuppressLint("RtlHardcoded")
-    private fun closeDrawer(): Boolean {
-        if (root.isDrawerOpen(GravityCompat.START)) {
-            root.closeDrawer(Gravity.LEFT)
+    private fun drawerHandler(open: Boolean = true): Boolean {
+        if (root.isOpen) {
+            root.close()
             return true // successful
+        }
+        if (open) {
+            root.open()
         }
         return false
     }

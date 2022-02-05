@@ -5,6 +5,11 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <style name="my_custom_shape" parent="">
+        <item name="boxCornerRadiusTopStart">20dp</item>
+        <item name="boxCornerRadiusBottomEnd">20dp</item>
+    </style>
+
     <style name="myTextView" parent="Widget.AppCompat.TextView">
 
         <item name="android:gravity">start</item>

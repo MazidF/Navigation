@@ -7,6 +7,7 @@
     android:fillViewport="true">
 
     <LinearLayout
+        android:id="@+id/profile_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="20dp"
@@ -21,19 +22,19 @@
             android:textColor="@color/design_default_color_primary_variant"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/profile_image_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/profile_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
                 android:layout_gravity="center"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:shapeAppearanceOverlay="@style/circle_shape"
                 app:srcCompat="@drawable/icon_user" />
 
             <ImageView
@@ -47,6 +48,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/profile_name_layout"
             style="@style/myTextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,6 +62,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/profile_family_layout"
             style="@style/myTextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -73,6 +76,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/profile_email_layout"
             style="@style/myTextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,6 +87,20 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/profile_email"
                 android:inputType="textEmailAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/myTextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:startIconDrawable="@drawable/icon_profile"
+            android:hint="UserName">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/profile_username"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -102,17 +120,30 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/myTextInputLayout"
+            android:id="@+id/profile_birthday_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:startIconDrawable="@drawable/icon_profile"
-            android:hint="UserName">
+            style="@style/myTextInputLayout"
+            app:endIconMode="custom"
+            android:hint="Birthday"
+            app:endIconDrawable="@drawable/icon_calendar"
+            app:startIconDrawable="@drawable/icon_cake">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/profile_username"
+                android:id="@+id/profile_birthday"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:inputType="date"/>
+
         </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/profile_register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Register"
+            android:layout_marginTop="50sp"
+            app:cornerRadius="24dp"/>
 
     </LinearLayout>
 
