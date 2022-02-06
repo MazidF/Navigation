@@ -1,33 +1,27 @@
 package com.example.netflix
 
-import android.graphics.Bitmap
 import android.view.View
-import androidx.lifecycle.MutableLiveData
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.MutableLiveData
 
 class ViewModelNetflix : ViewModel() {
+    var favoritesIndexList: MutableList<Int>? = null
     var image = MutableLiveData<Bitmap>(null)
     val moveToLiveData = MutableLiveData(ICON.NONE)
-    var user = MutableLiveData<NetflixUser>(null)
+    var user: NetflixUser? = null
     val hasRegistered = MutableLiveData(false)
-    val movies by lazy {
-        MutableLiveData<MutableList<View>>(mutableListOf())
-    }
-    val favoriteMovies by lazy {
-        MutableLiveData<MutableList<View>>(mutableListOf())
-    }
+    val favoriteMovies: MutableList<View> = mutableListOf()
     val favoriteRemoved by lazy {
         MutableLiveData<View>()
     }
 
-    fun getView(index: Int) = movies.value!![index]
-
     fun addFavorite(view: View) {
-        favoriteMovies.value?.add(view)
+        favoriteMovies.add(view)
     }
 
     fun removeFavorite(view: View) {
-        favoriteMovies.value?.remove(view)
+        favoriteMovies.remove(view)
         favoriteRemoved.value = view
     }
 

@@ -23,7 +23,7 @@ class FragmentFavorite : Fragment(R.layout.fragment_favorite) {
                     removeView(it)
                 }
 
-                for (view in favoriteMovies.value!!) {
+                for (view in favoriteMovies) {
                     addView(view)
                 }
             }

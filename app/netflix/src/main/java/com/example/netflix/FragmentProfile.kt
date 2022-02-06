@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -21,7 +22,8 @@ import java.util.*
 import java.util.Calendar.*
 
 
-class FragmentProfile(val launcher: ActivityResultLauncher<Intent>) : Fragment(R.layout.fragment_profile) {
+class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
+    Fragment(R.layout.fragment_profile) {
     private lateinit var dialog: AlertDialog.Builder
     lateinit var binding: FragmentProfileBinding
     private val model: ViewModelNetflix by activityViewModels()
@@ -32,7 +34,6 @@ class FragmentProfile(val launcher: ActivityResultLauncher<Intent>) : Fragment(R
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentProfileBinding.bind(view)
         init()
-
     }
 
     private fun init() {
@@ -58,7 +59,7 @@ class FragmentProfile(val launcher: ActivityResultLauncher<Intent>) : Fragment(R
             profileBirthday.setRegex(Regex("^\\d{4}/\\d{2}/\\d{2}$"))
             profileRegister.setOnClickListener {
                 if (checker()) {
-                    model.user.value = binding.userMaker()
+                    model.user = binding.userMaker()
                     model.hasRegistered.value = true
                 }
             }
@@ -73,19 +74,22 @@ class FragmentProfile(val launcher: ActivityResultLauncher<Intent>) : Fragment(R
         return NetflixUser(
             profileName.text!!.trim().toString(),
             profileFamily.text!!.trim().toString(),
-            profileEmail.text!!.trim().toString() + "@gmail.com").apply {
-                profileUsername.text?.let {
-                    if (it.isNotBlank()) {
-                        this.userName = it.toString()
-                    }
+            profileEmail.text!!.trim().toString() + "@gmail.com"
+        ).apply {
+            profileUsername.text?.let {
+                if (it.isNotBlank()) {
+                    this.userName = it.toString()
                 }
-                this.image = model.image.value
+            }
+            this.phone = profilePhone.text.toString()
+            this.birthday = profileBirthday.text.toString()
+            this.image = model.image.value
         }
     }
 
     private fun checker(): Boolean {
 
-        fun checkIfNotEmpty(editText: TextInputEditText, parent: TextInputLayout) : Boolean {
+        fun checkIfNotEmpty(editText: TextInputEditText, parent: TextInputLayout): Boolean {
             var result = false
             parent.helperText = if (editText.text!!.isBlank()) {
                 "*Required"
@@ -101,7 +105,7 @@ class FragmentProfile(val launcher: ActivityResultLauncher<Intent>) : Fragment(R
             return result
         }
 
-        fun checkIfValid(editText: TextInputEditText) : Boolean {
+        fun checkIfValid(editText: TextInputEditText): Boolean {
             if (editText.text!!.isNotBlank() && editText.currentTextColor == RED) {
                 editText.requestFocus()
                 return false
@@ -188,6 +192,20 @@ class FragmentProfile(val launcher: ActivityResultLauncher<Intent>) : Fragment(R
                     profileEmail.setText(email)
                     profilePhone.setText(phone)
                     profileBirthday.setText(birthday)
+
+                    hasBeenSet = false
+                } else if (model.hasRegistered.value!!) {
+                    val user = model.user!!
+                    profileUsername.setText(user.userName)
+                    profileName.setText(user.name)
+                    profileFamily.setText(user.family)
+                    profileEmail.setText(user.email.replace("@gmail.com", ""))
+                    profilePhone.setText(user.phone)
+                    profileBirthday.setText(user.birthday)
+                    profileImage.setImageBitmap(user.image)
+                    user.image?.let {
+                        model.image.value = it
+                    }
                     hasBeenSet = false
                 }
             }

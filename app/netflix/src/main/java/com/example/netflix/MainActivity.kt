@@ -1,26 +1,18 @@
 package com.example.netflix
 
 import android.Manifest
-import android.R.attr.bitmap
-import android.R.attr.data
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
-import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import android.view.View.*
-import android.widget.Toolbar
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
 import androidx.core.view.children
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
@@ -30,9 +22,7 @@ import androidx.navigation.ui.NavigationUI
 import com.example.netflix.ViewModelNetflix.Companion.ICON.*
 import com.example.netflix.databinding.ActivityMainBinding
 import com.example.netflix.databinding.UserLayoutBinding
-import java.io.FileDescriptor
-import java.io.IOException
-import java.io.InputStream
+import java.io.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -49,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         launcherInit()
         setCustomFactory()
+        load()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -68,6 +59,9 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment {
                 if (loadFragmentClass(classLoader, className) == FragmentProfile::class.java) {
+//                    if (model.hasRegistered.value!!) {
+//                        return FragmentProfileShower()
+//                    }
                     return FragmentProfile(launcher)
                 }
                 return super.instantiate(classLoader, className)
@@ -115,7 +109,7 @@ class MainActivity : AppCompatActivity() {
             model.hasRegistered.observe(this@MainActivity) {
                 if (it) {
                     userRegister.visibility = GONE
-                    val user = model.user.value!!
+                    val user = model.user!!
                     userUsername.apply {
                         text = user.userName
                         visibility = VISIBLE
@@ -139,6 +133,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        save()
         model.moveToLiveData.value = NONE
         // change it to NONE for preventing to changing item
     }
@@ -154,7 +149,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        return drawerHandler() || /*NavigationUI.navigateUp(controller, root) ||*/ super.onSupportNavigateUp()
+        return drawerHandler() ||
+                /*NavigationUI.navigateUp(controller, root) ||*/ super.onSupportNavigateUp()
     }
 
     @SuppressLint("RtlHardcoded")
@@ -167,5 +163,64 @@ class MainActivity : AppCompatActivity() {
             root.open()
         }
         return false
+    }
+
+    override fun onStart() {
+        super.onStart()
+    }
+
+    private fun save() {
+        val edit = this.getPreferences(MODE_PRIVATE).edit()
+        with(model) {
+            edit.apply {
+                if (favoriteMovies.isNotEmpty()) {
+                    val list = favoriteMovies.map {
+                        (it.tag as Movie).index
+                    }.joinToString(", ")
+                    putString("favorites", list)
+                }
+                putBoolean("hasUser", hasRegistered.value!!)
+            }.apply()
+
+            if (hasRegistered.value!!) {
+                val root = File(filesDir, "User")
+                if (!root.exists()) {
+                    root.mkdir()
+                }
+                val file = File(root, "file")
+                if (!file.exists()) {
+                    file.createNewFile()
+                }
+                ObjectOutputStream(file.outputStream()).use { out ->
+                    out.writeUnshared(user!!.save())
+                    out.flush()
+                }
+            }
+        }
+    }
+
+    private fun load() {
+        val sharedPreferences = this.getPreferences(MODE_PRIVATE)
+        with(sharedPreferences) {
+            val hasUser = getBoolean("hasUser", false)
+            if (hasUser) {
+                val root = File(filesDir, "User")
+                if (root.exists()) {
+                    val file = File(root, "file")
+                    if (file.exists()) {
+                        ObjectInputStream(file.inputStream()).use { input ->
+                            val user = input.readUnshared() as NetflixUser.SerializableUser
+                            model.user = user.toUser()
+                        }
+                    }
+                }
+            }
+            model.hasRegistered.value = hasUser
+            if (contains("favorites")) {
+                model.favoritesIndexList = getString("favorites", null)!!.split(", ")
+                    .map(String::toInt)
+                    .toMutableList()
+            }
+        }
     }
 }

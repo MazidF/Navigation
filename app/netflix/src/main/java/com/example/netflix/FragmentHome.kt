@@ -22,9 +22,9 @@ import androidx.navigation.ui.NavigationUI
 import com.example.netflix.databinding.FragmentHomeBinding
 
 class FragmentHome : Fragment(R.layout.fragment_home) {
-    var hasRegistered = false
-    val homeModel: ViewModelSaveLayout by viewModels()
     val model: ViewModelNetflix by activityViewModels()
+    val homeModel: ViewModelSaveLayout by viewModels()
+    var hasRegistered = false
     lateinit var binding: FragmentHomeBinding
     lateinit var dialog: AlertDialog.Builder
     private val context by lazy {
@@ -43,10 +43,13 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
 
     @SuppressLint("UseCompatLoadingForDrawables")
     private fun init() {
+        dialog = dialogMaker()
+
+        hasRegistered = model.hasRegistered.value!!
+
         with(binding.homeList) {
             val list = homeModel.linearLayouts.value!!
             if (list.isNotEmpty()) {
-                hasRegistered = model.hasRegistered.value!!
                 for (linear in list) {
                     linear.parent
                     addView(linear)
@@ -60,12 +63,16 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
                 }
             }
         }
+
         with(model) {
             hasRegistered.observe(viewLifecycleOwner) {
                 this@FragmentHome.hasRegistered = it
             }
         }
-        dialog = AlertDialog.Builder(context)
+    }
+
+    private fun dialogMaker(): AlertDialog.Builder {
+        return AlertDialog.Builder(context)
             .setTitle("You should register first!!")
             .setPositiveButton("Register") { _, _ ->
                 model.moveToLiveData.value = PROFILE
@@ -110,9 +117,12 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
                         true
                     }
                 }
+                model.favoritesIndexList?.run {
+                    if (index in this) {
+                        this@apply.callOnClick()
+                    }
+                }
             }
-        }.apply {
-            model.movies.value?.add(this)
         }
     }
 
@@ -129,6 +139,7 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
                 }
             }
         }
+        view.tag = movie
         liked.tag = view
         model.addFavorite(view)
     }
