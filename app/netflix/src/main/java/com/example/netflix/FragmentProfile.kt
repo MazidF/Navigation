@@ -155,8 +155,8 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
                 name = profileName.text.toString()
                 family = profileFamily.text.toString()
                 profileUsername.text.toString().let {
-                    if (it.isNotBlank()) {
-                        userName = it
+                    userName = it.ifBlank {
+                        this.name + " " + this.family
                     }
                 }
                 phone = profilePhone.text.toString()

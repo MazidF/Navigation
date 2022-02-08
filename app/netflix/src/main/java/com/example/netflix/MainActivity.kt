@@ -173,6 +173,7 @@ class MainActivity : AppCompatActivity() {
     private fun unregister() {
         saveUser(model, model.user!!)
         model.user = null
+        model.userChanged.value = true
         model.hasRegistered.value = false
     }
 
