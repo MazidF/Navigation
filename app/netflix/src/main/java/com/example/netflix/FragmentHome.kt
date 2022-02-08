@@ -15,10 +15,8 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.example.netflix.ViewModelNetflix.Companion.ICON.*
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.NavigationUI
+import com.example.netflix.ViewModelNetflix.Companion.ICON.PROFILE
 import com.example.netflix.databinding.FragmentHomeBinding
 
 class FragmentHome : Fragment(R.layout.fragment_home) {
@@ -30,9 +28,6 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
     private val context by lazy {
         requireActivity()
     }
-    val controller by lazy {
-        findNavController()
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,32 +36,47 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
         init()
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
     private fun init() {
         dialog = dialogMaker()
 
         hasRegistered = model.hasRegistered.value!!
 
+        setViews()
+
+        with(model) {
+            hasRegistered.observe(viewLifecycleOwner) {
+                if (this@FragmentHome.hasRegistered && it.not()) {
+                    homeModel.linearLayouts.clear()
+                    binding.homeList.removeAllViews()
+                    setViews()
+                }
+                this@FragmentHome.hasRegistered = it
+            }
+        }
+    }
+
+    @SuppressLint("UseCompatLoadingForDrawables")
+    private fun setViews() {
         with(binding.homeList) {
-            val list = homeModel.linearLayouts.value!!
-            if (list.isNotEmpty()) {
+            val list = homeModel.linearLayouts
+            if (/*model.hasRegistered.value!! and */list.isNotEmpty() and model.userChanged.value!!.not()) {
                 for (linear in list) {
-                    linear.parent
                     addView(linear)
                 }
             } else {
+                if (model.userChanged.value!!) {
+                    model.userChanged.value = false
+                    homeModel.linearLayouts.clear()
+                }
+                model.favoriteMovies.clear()
+
                 val param = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1F)
                 val bitmap = context.resources.getDrawable(R.drawable.icon_movie).toBitmap()
 
                 for (i in 0 .. 6) {
                     addView(addLinear(i, bitmap, param))
                 }
-            }
-        }
-
-        with(model) {
-            hasRegistered.observe(viewLifecycleOwner) {
-                this@FragmentHome.hasRegistered = it
+                model.favoritesIndexList = null
             }
         }
     }
@@ -117,9 +127,11 @@ class FragmentHome : Fragment(R.layout.fragment_home) {
                         true
                     }
                 }
-                model.favoritesIndexList?.run {
-                    if (index in this) {
-                        this@apply.callOnClick()
+                if (hasRegistered) {
+                    model.favoritesIndexList?.run {
+                        if (index in this) {
+                            this@apply.callOnClick()
+                        }
                     }
                 }
             }

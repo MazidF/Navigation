@@ -7,7 +7,7 @@ import androidx.fragment.app.activityViewModels
 import com.example.netflix.databinding.FragmentFavoriteBinding
 
 class FragmentFavorite : Fragment(R.layout.fragment_favorite) {
-    val model: ViewModelNetflix by activityViewModels()
+    private val model: ViewModelNetflix by activityViewModels()
     lateinit var binding: FragmentFavoriteBinding
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

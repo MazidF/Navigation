@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/fragmentHome"
         android:name="com.example.netflix.FragmentHome"
-        android:label="FragmentHome" >
+        android:label="Home" >
         <action
             android:id="@+id/action_fragmentHome_to_fragmentProfile"
             app:destination="@id/fragmentProfile" />
@@ -22,7 +22,7 @@
     <fragment
         android:id="@+id/fragmentProfile"
         android:name="com.example.netflix.FragmentProfile"
-        android:label="FragmentProfile" >
+        android:label="Profile" >
         <action
             android:id="@+id/action_fragmentProfile_to_fragmentFavorite"
             app:destination="@id/fragmentFavorite" />
@@ -37,7 +37,7 @@
     <fragment
         android:id="@+id/fragmentComingSoon"
         android:name="com.example.netflix.FragmentComingSoon"
-        android:label="FragmentComingSoon" >
+        android:label="ComingSoon" >
         <action
             android:id="@+id/action_fragmentComingSoon_to_fragmentFavorite"
             app:destination="@id/fragmentFavorite" />
@@ -52,7 +52,7 @@
     <fragment
         android:id="@+id/fragmentFavorite"
         android:name="com.example.netflix.FragmentFavorite"
-        android:label="FragmentFavorite" >
+        android:label="Favorite" >
         <action
             android:id="@+id/action_fragmentFavorite_to_fragmentProfile"
             app:destination="@id/fragmentProfile" />

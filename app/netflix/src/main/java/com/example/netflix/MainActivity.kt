@@ -2,6 +2,7 @@ package com.example.netflix
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -14,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
+import androidx.core.view.forEach
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
@@ -80,10 +82,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.icon_menu)
         with(binding) {
             this@MainActivity.root = this.root
             menuItems = bottomNavigation.menu.children.toList()
-            NavigationUI.setupActionBarWithNavController(this@MainActivity, controller, root)
+//            NavigationUI.setupActionBarWithNavController(this@MainActivity, controller, root)
             NavigationUI.setupWithNavController(bottomNavigation, controller)
             NavigationUI.setupWithNavController(drawer, controller)
             headerInit(drawer.getHeaderView(0))
@@ -100,10 +104,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun register(email: String) {
+        loadUser(model, email)
+        model.hasRegistered.value = true
+    }
+
     private fun headerInit(header: View) {
         val binding = UserLayoutBinding.bind(header)
         with(binding) {
             userRegister.setOnClickListener {
+                drawerHandler()
                 moveTo(3)
             }
             model.hasRegistered.observe(this@MainActivity) {
@@ -113,22 +123,57 @@ class MainActivity : AppCompatActivity() {
                     userUsername.apply {
                         text = user.userName
                         visibility = VISIBLE
+                        isSelected = true
                     }
                     userEmail.apply {
                         text = user.email
                         visibility = VISIBLE
+                        isSelected = true
                     }
                     user.image?.let { bitmap ->
                         userImage.setImageBitmap(bitmap)
                     }
+                    setMenu()
                 } else {
                     userRegister.visibility = VISIBLE
                     userUsername.visibility = GONE
                     userEmail.visibility = GONE
                     userImage.setImageResource(R.drawable.icon_user)
+                    hideMenu()
                 }
             }
         }
+    }
+
+    private fun hideMenu() {
+        binding.drawer.menu.forEach {
+            it.isVisible = false
+        }
+    }
+
+    private fun setMenu() {
+        if (binding.drawer.tag != true) {
+            binding.drawer.inflateMenu(R.menu.drawer_menu)
+            with(binding.drawer.menu) {
+                findItem(R.id.menu_unregister).setOnMenuItemClickListener {
+                    unregister()
+                    drawerHandler()
+                    moveTo(0)
+                    false
+                }
+            }
+            binding.drawer.tag = true
+        } else {
+            binding.drawer.menu.forEach {
+                it.isVisible = true
+            }
+        }
+    }
+
+    private fun unregister() {
+        saveUser(model, model.user!!)
+        model.user = null
+        model.hasRegistered.value = false
     }
 
     override fun onPause() {
@@ -165,25 +210,28 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     private fun save() {
-        val edit = this.getPreferences(MODE_PRIVATE).edit()
+        val edit = this.getPreferences(MODE_PRIVATE).edit().apply {
+            this.clear()
+        }
         with(model) {
+            val hasUser = hasRegistered.value!!
             edit.apply {
-                if (favoriteMovies.isNotEmpty()) {
+/*                if (favoriteMovies.isNotEmpty()) {
                     val list = favoriteMovies.map {
                         (it.tag as Movie).index
                     }.joinToString(", ")
                     putString("favorites", list)
+                }*/
+                if (hasUser) {
+                    putString("email", user!!.email)
                 }
-                putBoolean("hasUser", hasRegistered.value!!)
+                putStringSet("users", allUsers)
             }.apply()
 
-            if (hasRegistered.value!!) {
-                val root = File(filesDir, "User")
+            if (hasUser) {
+                saveUser(model, user!!)
+/*                val root = File(filesDir, "User")
                 if (!root.exists()) {
                     root.mkdir()
                 }
@@ -194,7 +242,7 @@ class MainActivity : AppCompatActivity() {
                 ObjectOutputStream(file.outputStream()).use { out ->
                     out.writeUnshared(user!!.save())
                     out.flush()
-                }
+                }*/
             }
         }
     }
@@ -202,9 +250,14 @@ class MainActivity : AppCompatActivity() {
     private fun load() {
         val sharedPreferences = this.getPreferences(MODE_PRIVATE)
         with(sharedPreferences) {
-            val hasUser = getBoolean("hasUser", false)
-            if (hasUser) {
-                val root = File(filesDir, "User")
+            getStringSet("users", hashSetOf())?.let {
+                model.allUsers.addAll(it)
+            }
+            val email = getString("email", null)
+            if (email != null) {
+                register(email)
+//                loadUser(email)
+/*                val root = File(filesDir, "User")
                 if (root.exists()) {
                     val file = File(root, "file")
                     if (file.exists()) {
@@ -213,13 +266,55 @@ class MainActivity : AppCompatActivity() {
                             model.user = user.toUser()
                         }
                     }
-                }
+                }*/
             }
-            model.hasRegistered.value = hasUser
-            if (contains("favorites")) {
+//            model.hasRegistered.value = email != null
+/*            if (contains("favorites")) {
                 model.favoritesIndexList = getString("favorites", null)!!.split(", ")
                     .map(String::toInt)
                     .toMutableList()
+            }*/
+        }
+    }
+
+}
+
+fun Context.saveUser(model: ViewModelNetflix, user: NetflixUser) {
+    val root = File(filesDir, "User")
+    if (!root.exists()) {
+        root.mkdir()
+    }
+    val file = File(root, user.email)
+    if (!file.exists()) {
+        file.createNewFile()
+    }
+
+    val list = model.favoriteMovies
+    val favorites = if (list.isNotEmpty()) {
+        list.map {
+            (it.tag as Movie).index
+        }
+    } else {
+        null
+    }
+
+    ObjectOutputStream(file.outputStream()).use { out ->
+        out.writeUnshared(user.save(favorites))
+        out.flush()
+    }
+}
+
+fun Context.loadUser(model: ViewModelNetflix, email: String) {
+    val root = File(filesDir, "User")
+    if (root.exists()) {
+        val file = File(root, email)
+        if (file.exists()) {
+            ObjectInputStream(file.inputStream()).use { input ->
+                val user = input.readUnshared() as NetflixUser.SerializableUser
+                model.user = user.toUser()
+                user.favorites?.let {
+                    model.favoritesIndexList = it
+                }
             }
         }
     }

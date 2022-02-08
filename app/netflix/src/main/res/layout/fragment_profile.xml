@@ -145,6 +145,15 @@
             android:layout_marginTop="50sp"
             app:cornerRadius="24dp"/>
 
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/profile_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Login"
+            android:layout_marginTop="20sp"
+            app:cornerRadius="24dp"/>
+
     </LinearLayout>
 
 </ScrollView>

@@ -7,7 +7,8 @@ import androidx.lifecycle.MutableLiveData
 
 class ViewModelSaveLayout : ViewModel() {
     val linearLayouts by lazy {
-        MutableLiveData<MutableList<LinearLayout>>(mutableListOf())
+//        MutableLiveData<MutableList<LinearLayout>>(mutableListOf())
+        mutableListOf<LinearLayout>()
     }
 
     val views by lazy {
@@ -17,7 +18,7 @@ class ViewModelSaveLayout : ViewModel() {
     var binding: Any? = null
 
     fun addLinear(linearLayout: LinearLayout) {
-        linearLayouts.value!!.add(linearLayout)
+        linearLayouts.add(linearLayout)
     }
 
     fun addView(view: View) {

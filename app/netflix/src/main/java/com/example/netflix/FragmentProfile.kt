@@ -1,5 +1,6 @@
 package com.example.netflix
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.DialogInterface
 import android.content.Intent
@@ -8,10 +9,15 @@ import android.graphics.Color.RED
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.view.Gravity.CENTER
 import android.view.View
+import android.view.ViewGroup.LayoutParams.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -29,13 +35,13 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
     private val model: ViewModelNetflix by activityViewModels()
     private val saver: ViewModelProfile by activityViewModels()
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentProfileBinding.bind(view)
         init()
     }
 
+    @SuppressLint("SetTextI18n")
     private fun init() {
         dialogInit()
         with(binding) {
@@ -54,20 +60,110 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
             val simpleRegex = Regex("^(\\s?[a-zA-Z]*)+$")
             profileName.setRegex(simpleRegex)
             profileFamily.setRegex(simpleRegex)
-            profileEmail.setRegex(Regex("^\\w+([\\.-]?\\w+)*$"))
+            var edit = false
+            profileEmail.setRegex(Regex("^\\w+([\\.-]?\\w+)*$")) {
+                model.user?.let { user ->
+                    profileRegister.text = if ("$it@gmail.com" == user.email) {
+                        edit = true
+                        "Edit"
+                    } else {
+                        edit = false
+                        "Register"
+                    }
+                }
+            }
             profilePhone.setRegex(Regex("^(0|\\+98)9(1[0-9]|3[1-9])[0-9]{7}$"))
             profileBirthday.setRegex(Regex("^\\d{4}/\\d{2}/\\d{2}$"))
             profileRegister.setOnClickListener {
-                if (checker()) {
-                    model.user = binding.userMaker()
-                    model.hasRegistered.value = true
+                if (checker(edit.not())) {
+                    if (edit) {
+                        if (model.hasRegistered.value!!) {
+                            editUser()
+                            model.hasRegistered.value = true
+                        } else {
+                            Toast.makeText(
+                                requireContext(),
+                                "You should register first",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        saveLastUser()
+                        model.user = binding.userMaker()
+                        model.hasRegistered.value = true
+                        edit = true
+                        profileRegister.text = "Edit"
+                        model.moveToLiveData.value = ViewModelNetflix.Companion.ICON.HOME
+                    }
                 }
+            }
+            profileLogin.setOnClickListener {
+                val context = requireContext()
+                val regex = Regex("^\\w+([\\.-]?\\w+)*@gmail\\.com$")
+                val view = LinearLayout(context).apply {
+                    gravity = CENTER
+                    orientation = LinearLayout.VERTICAL
+                }
+                val loginDialog = AlertDialog.Builder(context).setView(view).create()
+                val editText = EditText(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                }
+                view.addView(editText)
+                val button = Button(context).apply {
+                    text = "DONE"
+                    setOnClickListener {
+                        val text = editText.text.toString().trim()
+                        if (text.isNotBlank() and regex.matches(text)) {
+                            if (model.allUsers.contains(text)) {
+                                model.userChanged.value = true
+                                saveLastUser()
+                                context.loadUser(model, text)
+                                fill(model.user!!)
+                                model.hasRegistered.value = true
+                                loginDialog.cancel()
+                                model.moveToLiveData.value = ViewModelNetflix.Companion.ICON.HOME
+                            } else {
+                                editText.error = "This email is new!!"
+                            }
+                        } else {
+                            editText.error = "Invalid Input!!"
+                        }
+                    }
+                }
+                view.addView(button)
+                loginDialog.show()
             }
             profileNameLayout.setHelperTextColor(ColorStateList.valueOf(RED))
             profileFamilyLayout.setHelperTextColor(ColorStateList.valueOf(RED))
             profileEmailLayout.setHelperTextColor(ColorStateList.valueOf(RED))
         }
         load()
+    }
+
+    private fun saveLastUser() {
+        model.user?.let {
+            requireContext().saveUser(model, it)
+            model.user = null
+            model.userChanged.value = true
+            model.hasRegistered.value = false
+        }
+    }
+
+    private fun editUser() {
+        with(binding) {
+            with(model.user!!) {
+                name = profileName.text.toString()
+                family = profileFamily.text.toString()
+                profileUsername.text.toString().let {
+                    if (it.isNotBlank()) {
+                        userName = it
+                    }
+                }
+                phone = profilePhone.text.toString()
+                birthday = profileBirthday.text.toString()
+                image = model.image.value
+            }
+        }
     }
 
     private fun FragmentProfileBinding.userMaker(): NetflixUser {
@@ -87,7 +183,7 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
         }
     }
 
-    private fun checker(): Boolean {
+    private fun checker(isRegister: Boolean = true): Boolean {
 
         fun checkIfNotEmpty(editText: TextInputEditText, parent: TextInputLayout): Boolean {
             var result = false
@@ -118,10 +214,21 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
             result = checkIfValid(profileBirthday)
             result = result and checkIfValid(profilePhone)
             result = result and checkIfNotEmpty(profileEmail, profileEmailLayout)
+            if (isRegister) {
+                result = result and emailExist(profileEmail.text.toString()).not().also {
+                    if (!it) {
+                        profileEmailLayout.helperText = "This email has been used"
+                    }
+                }
+            }
             result = result and checkIfNotEmpty(profileFamily, profileFamilyLayout)
             result = result and checkIfNotEmpty(profileName, profileNameLayout)
         }
         return result
+    }
+
+    private fun emailExist(email: String): Boolean {
+        return model.allUsers.contains("$email@gmail.com")
     }
 
     private fun pikerMaker(editText: TextInputEditText): DatePickerDialog {
@@ -131,7 +238,7 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
         }, cal.get(YEAR), cal[MONTH], cal[DAY_OF_MONTH])
     }
 
-    private fun TextInputEditText.setRegex(regex: Regex) {
+    private fun TextInputEditText.setRegex(regex: Regex, task: ((CharSequence) -> Unit)? = null) {
         val color = currentTextColor
         doOnTextChanged { text, _, _, _ ->
             if (!regex.matches(text!!)) {
@@ -139,6 +246,7 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
             } else {
                 this.setTextColor(color)
             }
+            task?.invoke(text)
         }
     }
 
@@ -164,6 +272,11 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
     }
 
     override fun onPause() {
+        binding.run {
+            profileNameLayout.helperText = ""
+            profileEmailLayout.helperText = ""
+            profileFamilyLayout.helperText = ""
+        }
         save()
         super.onPause()
     }
@@ -196,18 +309,23 @@ class FragmentProfile(private val launcher: ActivityResultLauncher<Intent>) :
                     hasBeenSet = false
                 } else if (model.hasRegistered.value!!) {
                     val user = model.user!!
-                    profileUsername.setText(user.userName)
-                    profileName.setText(user.name)
-                    profileFamily.setText(user.family)
-                    profileEmail.setText(user.email.replace("@gmail.com", ""))
-                    profilePhone.setText(user.phone)
-                    profileBirthday.setText(user.birthday)
-                    profileImage.setImageBitmap(user.image)
-                    user.image?.let {
-                        model.image.value = it
-                    }
-                    hasBeenSet = false
+                    fill(user)
                 }
+            }
+        }
+    }
+
+    private fun fill(user: NetflixUser) {
+        with(binding) {
+            profileUsername.setText(user.userName)
+            profileName.setText(user.name)
+            profileFamily.setText(user.family)
+            profileEmail.setText(user.email.replace("@gmail.com", ""))
+            profilePhone.setText(user.phone)
+            profileBirthday.setText(user.birthday)
+            user.image?.let {
+                profileImage.setImageBitmap(it)
+                model.image.value = it
             }
         }
     }

@@ -5,13 +5,13 @@ import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
 import java.io.Serializable
 
-data class NetflixUser(val name: String, val family: String, val email: String) : Serializable {
+data class NetflixUser(var name: String, var family: String, val email: String) : Serializable {
     var userName = "$name $family"
     var phone: String? = null
     var birthday: String? = null
     var image: Bitmap? = null
 
-    class SerializableUser(user: NetflixUser) : Serializable {
+    class SerializableUser(user: NetflixUser, favorites: List<Int>?) : Serializable {
         private val name = user.name
         private val email = user.email
         private val phone = user.phone
@@ -19,6 +19,7 @@ data class NetflixUser(val name: String, val family: String, val email: String) 
         private val userName = user.userName
         private val birthday = user.birthday
         private var bytes: ByteArray
+        val favorites: List<Int>? = favorites
 
         init {
             val stream = ByteArrayOutputStream()
@@ -34,5 +35,5 @@ data class NetflixUser(val name: String, val family: String, val email: String) 
         }
     }
 
-    fun save() = SerializableUser(this)
+    fun save(favorites: List<Int>? = null) = SerializableUser(this, favorites)
 }

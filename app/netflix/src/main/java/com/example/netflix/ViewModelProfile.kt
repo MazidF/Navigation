@@ -10,4 +10,13 @@ class ViewModelProfile : ViewModel() {
     lateinit var phone: String
     lateinit var birthday: String
     var hasBeenSet = false
+
+    fun clear() {
+        this.username = ""
+        this.name = ""
+        this.family = ""
+        this.email = ""
+        this.phone = ""
+        this.birthday = ""
+    }
 }
